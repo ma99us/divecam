@@ -2,13 +2,13 @@
 import {useBackendStore} from "@/stores/backend";
 import {mapState, mapStores} from "pinia";
 import type {PinAction, RebootAction, TimeAction} from "@/model/dtos";
+import {CAMERA_URL} from "@/stores/api";
 
 export default {
   data() {
     return {
       rotatePin: 3,  // TODO: should not be hardcoded
       lightPin: 6,  // TODO: should not be hardcoded
-      cameraPort: 8081,
       sleepMinutes: 1,
       isCamLoaded: false,
       camRetry: 0,
@@ -20,7 +20,7 @@ export default {
     ...mapStores(useBackendStore),
     ...mapState(useBackendStore, ['statusText', 'isBusy']),
     streamHref() {
-      return window.location.protocol + "//" + window.location.hostname + ":" + this.cameraPort + "/?action=stream&r=" + this.camRetry;
+      return CAMERA_URL + "&r=" + this.camRetry;
     }
   },
   async mounted() {

@@ -33,12 +33,15 @@ all_pictures = []
 total_size = 0
 
 
-def shell_cmd(cmd, w_dir):
+def shell_cmd(cmd, w_dir, do_wait=True):
     w_dir = w_dir if w_dir is not None else '.'
     logger.info("shell_cmd(%s, %s)", cmd, w_dir)
     proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=w_dir)
-    proc.wait()
-    return proc.stdout.read().decode('UTF-8')
+    if do_wait:
+        proc.wait()
+        return proc.stdout.read().decode('UTF-8')
+    else:
+        return None
 
 
 def pin_write(w_pi, is_high):
@@ -112,12 +115,12 @@ def do_api(api, req):
             return res
         case "start-camera-stream":
             logger.info("start-camera-stream")
-            res = shell_cmd([f"{MJPG_STREAMER_DIR}runmjpg.sh", "&"], MJPG_STREAMER_DIR)
+            res = shell_cmd([f"{SCRIPTS_DIR}start-camera-stream.sh"], SCRIPTS_DIR, False)
             logger.info("shell_cmd result: \"%s\"", res)
             return res
         case "stop-camera-stream":
             logger.info("stop-camera-stream")
-            res = shell_cmd(["kill", "-9", "runmjpg.sh"], MJPG_STREAMER_DIR)
+            res = shell_cmd([f"{SCRIPTS_DIR}stop-camera-stream.sh"], SCRIPTS_DIR, False)
             logger.info("shell_cmd result: \"%s\"", res)
             return res
         case "find-pictures":

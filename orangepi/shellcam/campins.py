@@ -7,7 +7,7 @@ import os
 import signal
 import sys
 import time
-from pathlib import Path
+import threading
 from subprocess import Popen, STDOUT, PIPE
 
 import OPi.GPIO as GPIO
@@ -34,7 +34,10 @@ GPIO.setup(22, GPIO.OUT, initial=0)  # orange led - hotspot boot
 GPIO.setup(18, GPIO.OUT, initial=0)  # green led - camera boot
 GPIO.setup(12, GPIO.OUT, initial=0)  # camera lights
 
-last_button = -1
+boot_mode = None
+blink_timer = None
+is_blinking = False
+blinking_trigger = -1
 
 
 def shell_cmd(cmd, w_dir):
@@ -88,6 +91,7 @@ def reboot(mode):
 
 
 def toggle_channel(channel):
+    # logger.info(f"toggle_channel({channel})")
     GPIO.output(channel, not GPIO.input(channel))
 
 
@@ -97,6 +101,42 @@ def switch_channel(channel):
             GPIO.output(x, 1)
         else:
             GPIO.output(x, 0)
+
+
+def blinking_channel(channel, delay, max_times):
+    logger.info(f"blinking_channel({channel}) started; delay={delay}, max_times={max_times}")
+    global blinking_trigger
+    counter = 0
+    while is_blinking and counter < max_times:
+        counter = counter + 1
+        toggle_channel(channel)
+        time.sleep(delay)
+    logger.info(f"blinking_channel({channel}) finished; is_blinking={is_blinking}, counter={counter}")
+    if counter >= max_times:
+        blinking_trigger = -1
+        parse_mode(boot_mode)
+
+
+def start_blink_channel(channel, delay=0.5, max_times=20):
+    stop_blink_channel()
+    switch_channel(None)  # all off
+    logger.info(f"start_blink_channel({channel})")
+    global blink_timer, is_blinking
+    is_blinking = True
+    toggle_channel(channel)
+    blink_timer = threading.Timer(delay, blinking_channel, [channel, delay, max_times])
+    blink_timer.start()
+
+
+def stop_blink_channel():
+    global blink_timer, is_blinking
+    is_blinking = False
+    if blink_timer is not None:
+        logger.info(f"stop_blink_channel(); stopping...")
+        blink_timer.cancel()
+        blink_timer.join()
+        blink_timer = None
+        logger.info(f"stop_blink_channel(); stopped")
 
 
 def animate_all(speed=0.2):
@@ -117,37 +157,34 @@ def animate_all(speed=0.2):
     GPIO.output(16, 0)
 
 
-def btn_callback(channel):
-    global last_button
-    print(f"btn pressed {channel}, last button={last_button}")
-    do_act = last_button == channel
-    last_button = channel
+def trigger_callback(channel):
+    global blinking_trigger
+    logger.info(f"channel triggered {channel}, blinking_trigger={blinking_trigger}")
+    dbl_trigger = blinking_trigger == channel
+    blinking_trigger = channel
     if channel == 15:
-        if do_act:
-            animate_all()
-            # time.sleep(1)
+        if dbl_trigger:
+            start_blink_channel(16, 0.1, 10)
             reboot('normal')
         else:
-            switch_channel(16)
+            start_blink_channel(16)
     if channel == 10:
-        if do_act:
-            animate_all()
-            # time.sleep(1)
+        if dbl_trigger:
+            start_blink_channel(22, 0.1, 10)
             reboot('hotspot')
         else:
-            switch_channel(22)
+            start_blink_channel(22)
     if channel == 26:
-        if do_act:
-            animate_all()
-            # time.sleep(1)
+        if dbl_trigger:
+            start_blink_channel(18, 0.1, 10)
             reboot('wake')
         else:
-            switch_channel(18)
+            start_blink_channel(18)
 
 
-GPIO.add_event_detect(10, GPIO.RISING, callback=btn_callback, bouncetime=500)
-GPIO.add_event_detect(26, GPIO.RISING, callback=btn_callback, bouncetime=500)
-GPIO.add_event_detect(15, GPIO.RISING, callback=btn_callback, bouncetime=500)
+GPIO.add_event_detect(10, GPIO.RISING, callback=trigger_callback, bouncetime=500)
+GPIO.add_event_detect(26, GPIO.RISING, callback=trigger_callback, bouncetime=500)
+GPIO.add_event_detect(15, GPIO.RISING, callback=trigger_callback, bouncetime=500)
 
 
 def block_on_keyboard():
@@ -157,11 +194,11 @@ def block_on_keyboard():
             time.sleep(0.100)
             in_key = input("press a number:\n")
             if in_key == '1':
-                toggle_channel(16)
+                start_blink_channel(16)
             if in_key == '2':
-                toggle_channel(22)
+                start_blink_channel(22)
             if in_key == '3':
-                toggle_channel(18)
+                start_blink_channel(18)
             if in_key == '4':
                 animate_all(0.2)
             if in_key == '0':
@@ -173,16 +210,20 @@ def block_on_keyboard():
 
 try:
     animate_all(0.2)
-    mode = read_mode_file()
-    parse_mode(mode)
+    boot_mode = read_mode_file()
+    logging.info(f"boot mode: {boot_mode}")
+    parse_mode(boot_mode)
 
     if argument == 'keyboard':
         block_on_keyboard()
     else:
         print("block without input...\n")
-        signal.pause()      # block forever, without input
+        signal.pause()  # block forever, without input
 
 finally:
-    animate_all(0.2)
+    blinking_trigger = -1
+    stop_blink_channel()
+    # animate_all(0.2)
+    switch_channel(None)
     GPIO.cleanup()
     print("\nDone.")

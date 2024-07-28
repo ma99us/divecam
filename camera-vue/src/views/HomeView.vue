@@ -9,7 +9,7 @@ import LoadingComp from "@/components/LoadingComp.vue";
 export default {
   data() {
     return {
-      viewer: null as unknown as ImageViewer,
+      viewer: null as unknown as ImageViewer | null,
       pictures: [] as string[],
       picsLoaded: false,
       page: 0,

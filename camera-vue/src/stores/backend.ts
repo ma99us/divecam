@@ -32,7 +32,7 @@ export const useBackendStore = defineStore('backend', {
 
     async loadStatusText(timeout: number = 0) {
       this.statusText = await this.getString('status', timeout);
-      this.isBackendUp = this.statusText && !this.statusText.startsWith("ERROR: ")
+      this.isBackendUp = !this.statusText?.startsWith("ERROR: ")
       return this.isBackendUp;
     },
 
