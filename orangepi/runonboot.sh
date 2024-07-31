@@ -15,18 +15,18 @@ if [ -f "$WAKE_FILE" ]; then
   echo "Camera wake up"
 
   write_mode "wake"
-  /home/orangepi/runonwake.sh
+  ${HOME_DIR}runonwake.sh
 else
   if [ -f "$HOTSPOT_FILE" ]; then
     rm -f "$HOTSPOT_FILE" || true
     echo "Hotspot boot"
 
     write_mode "hotspot"
-    /home/orangepi/runonhotspot.sh
+    ${HOME_DIR}runonhotspot.sh
   else
     echo "Normal boot"
 
     write_mode "normal"
-    /home/orangepi/runonnormal.sh
+    ${HOME_DIR}runonnormal.sh
   fi
 fi

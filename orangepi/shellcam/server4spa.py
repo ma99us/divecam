@@ -24,7 +24,6 @@ logger.setLevel(logging.INFO)
 WWW_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8000
 HOME_DIR = "/home/orangepi/"
-MJPG_STREAMER_DIR = "/home/orangepi/mjpg-streamer/mjpg-streamer-experimental/"
 SCRIPTS_DIR = f"{HOME_DIR}shellcam/"
 MODE_FILE = f"{HOME_DIR}mode.txt"
 
@@ -105,7 +104,7 @@ def do_api(api, req):
                 pin_blink(w_pi, None)
             pin_blink(w_pi, None)
             sleep(duration_ms / 1000)
-            res = pin_blink(w_pi, None)
+            res = pin_blink(w_pi, 1400)
             return res
         case "go-to-sleep":
             minutes = req['minutes']
@@ -195,9 +194,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
         except Exception as err:
+            logger.error(err)
             self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR,
                             "API Exception {} in '{}':{}; ({})".format(err, api, req, self.path))
         except:
+            logger.error('Unexpected error!')
             self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR, "API Error in '{}':{}; ({})".format(api, req, self.path))
 
     def do_GET(self):

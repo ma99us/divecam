@@ -97,7 +97,7 @@ def toggle_channel(channel):
 
 def switch_channel(channel):
     for x in [16, 22, 18, 12]:
-        if x == channel:
+        if channel is not None and (x == channel or channel < 0):
             GPIO.output(x, 1)
         else:
             GPIO.output(x, 0)
@@ -157,25 +157,34 @@ def animate_all(speed=0.2):
     GPIO.output(16, 0)
 
 
+def blink_all(speed=0.5):
+    switch_channel(-1)  # all on
+    time.sleep(speed)
+    switch_channel(None)  # all off
+
+
 def trigger_callback(channel):
-    global blinking_trigger
+    global blinking_trigger, boot_mode
     logger.info(f"channel triggered {channel}, blinking_trigger={blinking_trigger}")
     dbl_trigger = blinking_trigger == channel
     blinking_trigger = channel
     if channel == 15:
         if dbl_trigger:
+            boot_mode = 'normal'
             start_blink_channel(16, 0.1, 10)
             reboot('normal')
         else:
             start_blink_channel(16)
     if channel == 10:
         if dbl_trigger:
+            boot_mode = 'hotspot'
             start_blink_channel(22, 0.1, 10)
             reboot('hotspot')
         else:
             start_blink_channel(22)
     if channel == 26:
         if dbl_trigger:
+            boot_mode = 'wake'
             start_blink_channel(18, 0.1, 10)
             reboot('wake')
         else:
@@ -219,11 +228,12 @@ try:
     else:
         print("block without input...\n")
         signal.pause()  # block forever, without input
-
+except Exception as err:
+    logger.error(err)
 finally:
     blinking_trigger = -1
     stop_blink_channel()
     # animate_all(0.2)
-    switch_channel(None)
+    # blink_all()
     GPIO.cleanup()
     print("\nDone.")

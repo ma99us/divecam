@@ -15,6 +15,8 @@ wifi on
 . takephoto.sh
 . webserver.sh
 
+all_off
+
 webserver_kill
 
 # start button listener

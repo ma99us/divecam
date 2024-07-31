@@ -3,6 +3,8 @@
 . piesystem.sh
 . spinandcapture.sh
 
+all_off
+
 if is_sleep_set; then
   SLEEP_MINS=$(read_sleep_minutes)
   echo "Sleep set to ${SLEEP_MINS} minutes"

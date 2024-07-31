@@ -11,7 +11,7 @@ spin_capture() {
   #pin_click 3
 
   total=10
-  delay=1.0
+  delay=0.91
   echo "Take $total photos with $delay seconds delay"
   for ((count = 1; count <= total; count++)); do
     echo "Light on"
@@ -23,9 +23,9 @@ spin_capture() {
     echo "Light off"
     pin_write 6 0
 
-    if [ $count = $total ]; then
-      break
-    fi
+#    if [ $count = $total ]; then
+#      break
+#    fi
 
     echo "Start spinning"
     pin_dbl_click 3

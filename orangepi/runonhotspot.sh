@@ -16,10 +16,13 @@ bluetooth off
 . webserver.sh
 . hotspot.sh
 
-# start hotspot
-hotspot_start
+all_off
 
+# start hotspot
+#sleep 1
+hotspot_start
 sleep 1
+wifi on
 
 webserver_kill
 
