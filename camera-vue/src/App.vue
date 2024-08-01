@@ -36,14 +36,15 @@ export default {
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/camvue-logo.png" height="42"/>
+    <img alt="App logo" class="logo" src="@/assets/divecam-logo.png" height="42"/>
+    <h6 class="title">DIVECAM</h6>
     <div class="wrapper">
       <nav>
         <RouterLink to="/">Pictures</RouterLink>
         <RouterLink to="/camera">Camera</RouterLink>
-        <span class="last-right">
+        <div class="last-right">
           <RouterLink to="/about">?</RouterLink>
-        </span>
+        </div>
       </nav>
     </div>
   </header>
@@ -53,8 +54,9 @@ export default {
     <PromptModal :modalActive="!isBackendUp" :doTimer="true">
       <div class="modal-content">
         <div>
-          <img style="display: inline-block" src="@/assets/orangepi-squashed.png" height="60"/>
-          <h2 style="display: inline-block">Waiting for device...</h2>
+          <h2>Waiting for device </h2>
+            <img src="@/assets/divecam-squashed.png" height="60"/>
+          <h2>...</h2>
         </div>
       </div>
     </PromptModal>
@@ -77,14 +79,21 @@ header .wrapper {
 }
 
 .logo {
-  margin: 0 1rem 0 0;
+  margin: 0 0 0 0;
+  vertical-align: top;
+}
+
+.title {
+  font-family: "Trebuchet MS";
+  color: #858585;
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+  font-size: x-large;
 }
 
 nav {
   display: flex;
   flex: 1;
-  margin-top: 12px;
-
 }
 
 nav a {
@@ -114,6 +123,9 @@ nav a:first-of-type {
 }
 
 nav .last-right {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  height: 100%;
   flex: 1;
   text-align: right;
 }
@@ -122,5 +134,17 @@ nav .last-right {
   display: flex;
   flex-direction: column;
   text-align: center;
+  align-items:center;
+}
+
+.modal-content img {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.modal-content h2 {
+  display: inline-block;
+  margin-bottom: 0;
+  vertical-align: middle;
 }
 </style>

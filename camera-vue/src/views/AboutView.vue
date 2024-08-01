@@ -1,5 +1,9 @@
 <template>
   <div class="about">
-    <h3>OrangePI Camera Project &nbsp;&nbsp;&nbsp; v. <span style="color: hsla(160, 100%, 37%, 1);">OPI3LTS-1.0</span> &nbsp;&nbsp;&nbsp; by <a href="mailto:ma99us@gmail.com">ma99us</a></h3>
+    <h3>Divecam - Underwater Camera Project</h3>
+    <h4>Version: <i>OPI3LTS Mark <span style="color: hsla(160, 100%, 37%, 1);">1</span></i></h4>
+    <h5>by <a href="mailto:ma99us@gmail.com">Mike (ma99us@gmail.com)</a></h5>
   </div>
 </template>
+<script setup lang="ts">
+</script>

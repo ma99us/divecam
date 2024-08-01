@@ -7,9 +7,9 @@ import {CAMERA_URL} from "@/stores/api";
 export default {
   data() {
     return {
-      rotatePin: 3,  // TODO: should not be hardcoded
-      lightPin: 6,  // TODO: should not be hardcoded
-      sleepMinutes: 1,
+      rotatePin: 3,  // TODO: should not be hardcoded. It should be retrieved from BE config
+      lightPin: 6,  // TODO: should not be hardcoded. It should be retrieved from BE config
+      sleepMinutes: 1,  // TODO: should not be hardcoded or come from local storage. It should be retrieved from BE config
       isCamLoaded: false,
       camRetry: 0,
       pollInterval: 0
@@ -25,11 +25,11 @@ export default {
   },
   async mounted() {
     this.sleepMinutes = Number(localStorage.getItem('sleepMinutes')) || 1;
-    await this.backendStore.startCamera();
+    await this.backendStore.startCamera();  // FIXME: this will mess up multiple users watching the stream
     this.pollInterval = setInterval(async () => !this.isCamLoaded ? this.camRetry++ : this.camRetry = 0, 1000);
   },
   async unmounted() {
-    await this.backendStore.stopCamera();
+    await this.backendStore.stopCamera();  // FIXME: this will mess up multiple users watching the stream
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
     }
@@ -66,6 +66,18 @@ export default {
       const imgEl: any = event.target;
       console.log('error loading', imgEl.src);
       // imgEl.src = require("@/assets/camera-empty.png");
+    },
+    async onTakePicture() {
+      let wasCamLoaded = this.isCamLoaded;
+      if (this.isCamLoaded) {
+        await this.backendStore.stopCamera();
+      }
+
+      await this.backendStore.takePicture();
+
+      if (wasCamLoaded) {
+        await this.backendStore.startCamera();
+      }
     }
   }
 }
@@ -73,27 +85,36 @@ export default {
 
 <template>
   <main>
-    <h3 class="bad-status" v-if="backendStore.isBadStatus">{{ statusText }}</h3>
+    <div class="row">
+      <div class="col-auto">
+        <h3 class="bad-status" v-if="backendStore.isBadStatus">Device Status: {{ statusText }}</h3>
+      </div>
+      <div class="col pull-right"></div>
+    </div>
     <div class="toolbar row">
       <div class="col-8">
         <!--      Pin wPi: {{ rotatePin }}: &nbsp;-->
         <button @click="onPinBlink(rotatePin)">Rotate</button>
         <button @click="onPinBlink(rotatePin, 1400)">Stop</button>&nbsp;
+        <br>
         <button @click="onStep(rotatePin, true)">Next Step</button>
-        <button @click="onStep(rotatePin, false)">Reverse Step</button>&nbsp;
+        <button @click="onStep(rotatePin, false)">Reverse Step</button>
+        <br>
         <button @click="onPinWrite(lightPin, true)">Light On</button>
         <button @click="onPinWrite(lightPin, false)">Light Off</button>&nbsp;
-        <br><br>
-        <div class="pull-right">
+        <br>
+        <snap>
           <button @click="onSleepMinutes(sleepMinutes)">Set sleep</button> for <input type="number" style="width:3rem" size="3" maxlength = "3" min="1" max="60" v-model="sleepMinutes"  v-on:change="onSleepMinutesChange"/> minutes
-        </div>
-
+        </snap>
+        <br>
       </div>
       <div class="col-4 pull-right">
-        <button @click="onReboot('normal')">Reboot to normal</button>&nbsp;
-        <br>
-        <button @click="onReboot('hotspot')">Reboot to HotSpot</button>&nbsp;
-        <button @click="onReboot('wake')">Reboot to Camera cycle</button>&nbsp;
+        <button @click="onReboot('normal')">Reboot to Dev</button><br>
+        <button @click="onReboot('hotspot')">Reboot to HotSpot</button><br>
+        <button @click="onReboot('wake')">Reboot to Camera cycle</button><br>
+      </div>
+      <div style="text-align: center; max-width: 800px;">
+        <button @click="onTakePicture()">Take a Picture</button>&nbsp;
       </div>
     </div>
     <div>

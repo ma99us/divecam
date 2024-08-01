@@ -16,8 +16,8 @@ export default {
       limit: 20,
       isDone: false,
       isLoading: false,
-      totalFiles : 0,
-      totalSize : 0
+      totalFiles: 0,
+      totalSize: 0
     }
   },
   components: {
@@ -49,6 +49,7 @@ export default {
           limit: this.limit
         } as FindPicturesAction;
         this.isLoading = true;
+        this.destroyPictureViewer();
         let pics = await this.backendStore.findPictures(action) ?? [];
         pics = pics.map((p: string) => (BASE_URL.length > 0 ? BASE_URL + '/' : '') + p);
         this.pictures.push(...pics);
@@ -66,6 +67,7 @@ export default {
         this.isDone = true;
       } finally {
         this.isLoading = false;
+        this.initPictureViewer();
       }
     },
 
@@ -79,23 +81,8 @@ export default {
     },
 
     showPictureViewer(selectedPicture: number = 0) {
-      if (!this.pictures) {
-        return
-      }
-
-      if (this.picsLoaded) {
-        this.destroyPictureViewer();
-      }
-
       if (!this.viewer) {
-        this.viewer = new ImageViewer({
-          // parentId: 'pictures',
-          images: this.pictures.map(p => {
-            return {'mainUrl': p}
-          })
-        });
-
-        this.picsLoaded = false;
+        return
       }
 
       this.viewer.selectImage(selectedPicture, true);
@@ -103,6 +90,17 @@ export default {
       if (!this.viewer.visible) {
         this.viewer.show();
       }
+    },
+
+    initPictureViewer() {
+      this.destroyPictureViewer();
+
+      this.viewer = new ImageViewer({
+        // parentId: 'pictures',
+        images: this.pictures.map(p => {
+          return {'mainUrl': p}
+        })
+      });
     },
 
     destroyPictureViewer() {
@@ -118,6 +116,7 @@ export default {
         await this.loadMorePictures();
       }
     },
+
     formatBytes(bytes: number, decimals = 2) {
       if (!+bytes) return '0 Bytes'
 
@@ -136,15 +135,20 @@ export default {
 
 <template>
   <main>
-    <h3 class="bad-status" v-if="backendStore.isBadStatus">{{ statusText }}</h3>
+    <div class="row">
+      <div class="col-auto">
+        <h3 class="bad-status" v-if="backendStore.isBadStatus">Device Status: {{ statusText }}</h3>
+      </div>
+      <div class="col pull-right" v-if="totalFiles">{{ formatBytes(totalSize) }} in {{ totalFiles }} files</div>
+    </div>
+    <div id="pictures" class="image-container" ref="scrollComponent">
+      <img v-for="(image, index) in pictures"
+           :key="index" :src="image" :alt="`Picture #${index+1}`"
+           @click="showPictureViewer(index)">
+    </div>
+    <div class="pull-right" v-if="totalFiles">{{ formatBytes(totalSize) }} in {{ totalFiles }} files</div>
+    <LoadingComp v-if="isLoading || isDone" :isDone="isDone"/>
   </main>
-  <div id="pictures" class="image-container" ref="scrollComponent">
-    <img v-for="(image, index) in pictures"
-         :key="index" :src="image" :alt="`Picture #${index+1}`"
-         @click="showPictureViewer(index)">
-  </div>
-  <div class="pull-right" v-if="totalFiles">{{formatBytes(totalSize)}} in {{totalFiles}} files</div>
-  <LoadingComp v-if="isLoading || isDone" :isDone="isDone"/>
 </template>
 
 <style>

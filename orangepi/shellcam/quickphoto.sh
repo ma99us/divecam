@@ -4,10 +4,10 @@
 . takephoto.sh
 
 echo "Light on"
-pin_write 4 1
+pin_write 6 1
 
 echo "Taking a photo"
 take_photo
 
 echo "Light off"
-pin_write 4 0
+pin_write 6 0

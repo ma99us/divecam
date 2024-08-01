@@ -66,7 +66,7 @@ def read_mode_file():
 def find_pictures(offset, limit):
     global all_pictures, total_size
     if offset == 0 or len(all_pictures) == 0:
-        all_pictures = glob.glob("data/*.jpg")
+        all_pictures = sorted(glob.glob("data/*.jpg"), reverse=True)
         total_size = 0
         for f in all_pictures:
             total_size += os.path.getsize(f)
@@ -100,8 +100,9 @@ def do_api(api, req):
             duration_ms = req['durationMs']
             forward = req['forward']
             logger.info("pin-step: pin=%s, duration=%s, forward=%s", w_pi, duration_ms, forward)
-            if forward:
+            if bool(forward):
                 pin_blink(w_pi, None)
+                sleep(0.1)
             pin_blink(w_pi, None)
             sleep(duration_ms / 1000)
             res = pin_blink(w_pi, 1400)
@@ -133,6 +134,10 @@ def do_api(api, req):
             if len(all_pictures) == 0 or total_size == 0:
                 find_pictures(0, 10)
             return {"files": len(all_pictures), "size": total_size}
+        case "take-picture":
+            res = shell_cmd([f"{SCRIPTS_DIR}quickphoto.sh"], SCRIPTS_DIR)
+            logger.info("shell_cmd result: \"%s\"", res)
+            return res
         case "reboot":
             mode = req['mode']
             logger.info("reboot; mode=%s", mode)

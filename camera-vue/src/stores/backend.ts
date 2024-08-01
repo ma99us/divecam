@@ -21,7 +21,7 @@ export const useBackendStore = defineStore('backend', {
       try {
         this.isBusy = true;
         const response = await api.get<string>(API_URL + prompt, {timeout});
-        return response.data ?? '';
+        return String(response.data) ?? '';
       } catch (error) {
         console.error(error)
         return 'ERROR: ' + error;
@@ -94,6 +94,11 @@ export const useBackendStore = defineStore('backend', {
 
     async picturesInfo(){
       return await this.postAction('pictures-info');
-    }
+    },
+
+    async takePicture() {
+      return await this.postAction('take-picture');
+    },
+
   }
 })
